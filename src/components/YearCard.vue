@@ -23,7 +23,7 @@ export default {
   props: {
       year: '',
       cardId: '',
-      accidents: 0,
+      accidents: '',
   }
 }
 </script>

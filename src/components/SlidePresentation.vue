@@ -2,6 +2,8 @@
   <div>
     <div id='presentation-container'>
       <pipe-map :site-data='siteData'></pipe-map>
+      <schedule :site-data='siteData'></schedule>
+
       <slide :isIntro='true' :id='introId'></slide>
       <!-- we forgo the use of a v-for directive to easily interrupt year cards with infoCards -->
       <slide :isYear='true' :year="'2000'" :accidents="years[2000]['accidents']"></slide>
@@ -89,6 +91,8 @@
 
 <script>
 import PipeMap from 'components/Map.vue'
+import Schedule from 'components/ScheduleVis.vue'
+
 import Slide from 'components/Slide.vue'
 import filter from 'lodash.filter'
 import sortby from 'lodash.sortby'
@@ -99,7 +103,8 @@ import $ from 'jquery'
 
 export default {
   props: {
-      siteData: {}
+      siteData: {},
+      scheduleData: {}
   },
 
   data() {
@@ -168,6 +173,7 @@ export default {
   components: {
     'slide': Slide,
     'pipe-map': PipeMap,
+    'schedule': Schedule
   },
 
   mounted() {

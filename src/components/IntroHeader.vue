@@ -1,14 +1,14 @@
 <template>
   <div>
-   <span class='large-text'>Pipeline Accidents </span>
+   <span class='large-text'>24 hour Schedule Planning</span>
    <div class='mid-container'>
      <div class='mid-content'>
        <div class='horz-line'></div>
-       <span class='medium-text'> of </span>
+       <span class='medium-text'>for</span>
        <div class='horz-line'></div>
      </div>
    </div>
-   <span class='large-text'> The 21st Century </span>
+   <span class='large-text'>Emergency Departments</span>
    <div class='caption-container'>
    </div>
   </div>

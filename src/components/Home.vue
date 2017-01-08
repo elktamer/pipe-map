@@ -1,7 +1,6 @@
 <template>
   <div id='main-container'>
     <modal></modal>
-    <app-header></app-header>
     <slide-pres :site-data='siteData'></slide-pres>
   </div>
 </template>

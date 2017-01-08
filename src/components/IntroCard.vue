@@ -27,7 +27,7 @@ export default {
 
   data() {
     return {
-      introText: 'Scroll down to traverse time. Clicking on accident sites show their Wikipedia descriptions. Radii correspond to gallons spilt (if applicable).'
+      introText: 'Scroll down to view.'
     }
   }
 }

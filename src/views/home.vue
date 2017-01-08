@@ -1,13 +1,11 @@
 <template>
   <div id='main-container'>
     <modal></modal>
-    <app-header></app-header>
-    <slide-pres :site-data='siteData'></slide-pres>
+    <slide-pres :site-data='siteData' :schedule-data='shiftTypes'></slide-pres>
   </div>
 </template>
 
 <script>
-import Header from 'components/Header.vue'
 import PipeMap from 'components/Map.vue'
 import Slide from 'components/Slide.vue'
 import SlidePresentation from 'components/SlidePresentation.vue'
@@ -23,23 +21,29 @@ export default {
 
   data() {
       return {
-        siteData: []
+        siteData: [],
+        shiftTypes: []
       }
   },
 
   components: {
     'pipe-map': PipeMap,
     'modal': Modal,
-    'app-header': Header,
     'slide-pres': SlidePresentation,
     'slide': Slide
   },
 
   mounted() {
     this.loadCSV("../data/pipe-data.csv")
+    this.loadJson("../data/shiftTypes.json")
   },
 
   methods: {
+    loadJson(f){
+      d3Request.json(f, function(data){
+        this.shiftTypes = data;
+      })
+    },
     loadCSV(f) { //could be moved to utils
       d3Request.csv(f)
           .row( d => {

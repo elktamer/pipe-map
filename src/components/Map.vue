@@ -50,7 +50,7 @@ export default {
     this.radiusFunc = d3scale.scaleSqrt()
                                 .domain([0, 1e6])
                                 .range([5, 50])
-    this.enterRadius = "80" // size to transition from to actual radius
+    this.enterRadius = "0" // size to transition from to actual radius
     this.exitRadius = "1" // size to transition to before disappearing
     this.radialUnits = "em"
     this.radialModifer = 0.075
