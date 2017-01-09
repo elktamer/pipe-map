@@ -1,8 +1,7 @@
 <template>
   <div>
     <div id='presentation-container'>
-      <pipe-map :site-data='siteData'></pipe-map>
-      <schedule :site-data='siteData'></schedule>
+      <schedule :schedule-data='scheduleData'></schedule>
 
       <slide :isIntro='true' :id='introId'></slide>
       <!-- we forgo the use of a v-for directive to easily interrupt year cards with infoCards -->
@@ -90,7 +89,6 @@
 </template>
 
 <script>
-import PipeMap from 'components/Map.vue'
 import Schedule from 'components/ScheduleVis.vue'
 
 import Slide from 'components/Slide.vue'
@@ -103,7 +101,6 @@ import $ from 'jquery'
 
 export default {
   props: {
-      siteData: {},
       scheduleData: {}
   },
 
@@ -172,7 +169,6 @@ export default {
 
   components: {
     'slide': Slide,
-    'pipe-map': PipeMap,
     'schedule': Schedule
   },
 
@@ -189,42 +185,8 @@ export default {
 
   methods: {
     filterSites() {
-      // Ensure one-time firing by creating a 'year' stack
-      if (this.yearStack[this.yearStack.length - 1] !== this.currentYear
-          && this.siteData.length > 1) {
-
-        this.updateYearStack(this.currentYear)
-        let currentYear = this.currentYear.toString()
-        window.eventBus.$emit('updateCurrentYear', currentYear)
-        let newData = filter(this.siteData, d => {
-          return d.date.getFullYear() <= currentYear
-        })
-        newData = sortby(newData, ['date'])
-        let currentYearData = filter(newData, d => {
-          return currentYear == d.date.getFullYear()
-        })
-        this.totalAccidents = newData.length
-        Vue.set(this.years[currentYear], 'accidents', currentYearData.length)
-        if (this.isMobile) {
-          window.eventBus.$emit('updateSites', currentYearData)
-        } else {
-          window.eventBus.$emit('updateSites', newData)
-        }
-        // this.easeSiteExposure(currentYearData, 2)
-      }
-    },
-    easeSiteExposure(dataList, time) {
-      // TODO: make this work! (sequentially display sites)
-      let interval = time / dataList.length,
-          ticker = interval,
-          growingData;
-      for (let i = 1; i < dataList.length + 1; i++) {
-        setTimeout( () => {
-          growingData = dataList.slice(0, i)
-          window.eventBus.$emit('updateSites', growingData)
-        }, ticker*1000)
-        ticker += interval
-      }
+        window.eventBus.$emit('updateCurrentYear', this.currentYear)
+        window.eventBus.$emit('updateSites', this.scheduleData)
     },
     updateYearStack(year) {
       // If a user refreshes while at ex: 2014,

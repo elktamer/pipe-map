@@ -40,7 +40,7 @@ export default {
 
   methods: {
     loadJson(f){
-      d3Request.json(f, function(data){
+      d3Request.json(f, data =>{
         this.shiftTypes = data;
       })
     },
