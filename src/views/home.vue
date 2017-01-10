@@ -6,7 +6,6 @@
 </template>
 
 <script>
-import PipeMap from 'components/Map.vue'
 import Slide from 'components/Slide.vue'
 import SlidePresentation from 'components/SlidePresentation.vue'
 import Modal from 'components/Modal.vue'
@@ -27,7 +26,6 @@ export default {
   },
 
   components: {
-    'pipe-map': PipeMap,
     'modal': Modal,
     'slide-pres': SlidePresentation,
     'slide': Slide
