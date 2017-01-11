@@ -65,23 +65,26 @@ export default {
   },
 
   mounted() {
-    this.presContainer.on('scroll.scroller', debounce(this.trackTime, 10))
+    this.presContainer.on('scroll.scroller', debounce(this.trackSlide, 10))
   },
 
   updated() { // ensure we render sites on reload of page
-    this.trackTime()
+    this.trackSlide()
   },
 
   methods: {
 
-    trackTime() {
+    trackSlide() {
       for (let year of this.yearsRange) { // this block is a good candidate for
         let cardId = '#' + year + '-card' // performance centric refactor
         let el = $(cardId)
         if (el && utils.isElementInViewport(el)) {
-          this.currentYear = year
-          let currentYear = this.currentYear.toString()
-          window.eventBus.$emit('updateCurrentYear', currentYear)        }
+          if( this.currentYear != year){
+            this.currentYear = year
+            let currentYear = this.currentYear.toString()
+            window.eventBus.$emit('updateCurrentYear', currentYear)
+          }
+         }
       }
     }
   }

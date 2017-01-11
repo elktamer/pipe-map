@@ -32,6 +32,7 @@ export default {
   created() {
     window.eventBus.$on('updateCurrentYear', d => {
       this.currentYear = d
+      console.log( this.currentYear)
       this.drawSites(this.currentSiteData)
     })
   },
@@ -85,7 +86,9 @@ export default {
     },
     drawSites(data) {
       let sites = this.svg.selectAll('.site, .site-unhighlighted, .site-highlighted')
-                            .data(data, d => {
+                            .data(data.filter(d=> {
+                               return this.currentYear == d.date.getFullYear();
+                             }), d => {
                               return d['uuid']
                             })
       // enter
