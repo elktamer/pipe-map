@@ -1,19 +1,16 @@
 <template>
   <div id='main-container'>
     <modal></modal>
-    <slide-pres :site-data='siteData' :schedule-data='shiftTypes'></slide-pres>
+    <slide-pres ></slide-pres>
   </div>
 </template>
 
 <script>
-import PipeMap from 'components/Map.vue'
-import Slide from 'components/Slide.vue'
 import SlidePresentation from 'components/SlidePresentation.vue'
 import Modal from 'components/Modal.vue'
 import moment from 'moment'
 import Vue from'vue'
 import utils from 'utils'
-import * as d3Request from 'd3-request'
 import jQuery from 'jquery'
 
 export default {
@@ -21,77 +18,18 @@ export default {
 
   data() {
       return {
-        siteData: [],
-        shiftTypes: []
       }
   },
 
   components: {
-    'pipe-map': PipeMap,
     'modal': Modal,
     'slide-pres': SlidePresentation,
-    'slide': Slide
   },
 
   mounted() {
-    this.loadCSV("../data/pipe-data.csv")
-    this.loadJson("../data/shiftTypes.json")
   },
 
   methods: {
-    loadJson(f){
-      d3Request.json(f, function(data){
-        this.shiftTypes = data;
-      })
-    },
-    loadCSV(f) { //could be moved to utils
-      d3Request.csv(f)
-          .row( d => {
-            // Python parser failed to catch this one.
-            if (d.description.includes('Kalamazoo')) {
-                d.gallons = 1139569
-            }
-            // ...and this one.
-            if (d.description.includes('Blackman Charter Township, Michigan')) {
-                d.gallons = 75000
-            }
-            // ..and this one.
-            if (d.description.includes('Cohasset, Minnesota')) {
-                d.gallons = 252000
-            }
-            // ..and this one.
-            if (d.description.includes('Rusk County, Wisconsin')) {
-                d.gallons = 201600
-            }
-            // ... and this one
-            if (d.description.includes('Douglas County, Wisconsin')) {
-                d.gallons = 100000
-            }
-            if (d.description.includes('Winchester, Kentucky, a Marathon Oil')) {
-                d.gallons = 490000
-            }
-            // .. and this one
-            if (d.description.includes('Lockport, Illinois. EPA')) {
-                d.gallons = 270000
-            }
-            return {
-              uuid: d.uuid,
-              description: d.description,
-              lat: d.latitude,
-              lng: d.longitude,
-              city: d.city,
-              state: d.state,
-              refLink: d['ref_link'],
-              gallons: d.gallons,
-              date: new Date(d.date),
-              accidentType: d['accident_type']
-            }
-          })
-          .get( (err, rows) => {
-            if (err) return console.error(err)
-            this.siteData = rows
-          })
-    }
   }
 }
 </script>

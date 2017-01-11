@@ -6,7 +6,6 @@
 </template>
 
 <script>
-/* with reference to http://bl.ocks.org/cmdoptesc/fc0e318ce7992bed7ca8 */
 import * as d3Select from 'd3-selection'
 import * as d3Request from 'd3-request'
 import * as d3Geo from 'd3-geo'
@@ -17,7 +16,7 @@ import * as topojson from 'topojson-client'
 import $ from 'jquery'
 
 export default {
-  name: 'main-app',
+  name: 'd3-app',
 
   props: {
     siteData: {}
@@ -31,21 +30,17 @@ export default {
   },
 
   created() {
-    window.eventBus.$on('updateSites', d => {
-      this.currentSiteData = d
-      this.drawSites(d)
-    })
     window.eventBus.$on('updateCurrentYear', d => {
       this.currentYear = d
+      this.drawSites(this.currentSiteData)
     })
   },
 
   mounted() {
-    this.createTooltip()
+    this.loadCSV("../data/pipe-data.csv")
+
     this.createContainer()
-    if (window.innerWidth <= 622) {
-      this.isMobile = true
-    }
+
     // create scale
     this.radiusFunc = d3scale.scaleSqrt()
                                 .domain([0, 1e6])
@@ -71,7 +66,7 @@ export default {
     },
     drawMap() {
       let x = this.width / 2,
-          y = this.isMobile ? this.height : this.height / 2
+          y = this.height / 2
       this.projection = d3Geo.geoAlbersUsa()
       this.projection.scale(this.width)
       this.projection.translate([x, y])
@@ -161,28 +156,8 @@ export default {
     },
     drawLegend() {
       let x = this.width - this.width / 10,
-          y = this.height - this.height / 10,
-          spacing
-      if (this.isMobile) {
-          x = this.width / 3,
-          y = this.height - this.height / 4
-          spacing = this.height / 90
-          this.legend = this.svg.append("g")
-          .attr("class", "legend")
-          .attr("transform", `translate(${x}, ${y})`)
-            .selectAll("g")
-              .data([149e4, 549e3, 149e3])
-            .enter().append("g");
-          this.legend.append("circle")
-              .attr("cy", (d, i) => { if(i===0) {return -spacing/4 + this.radialUnits} return (i*spacing) + this.radialUnits})
-              .attr("r", d => { return this.radiusFunc(d)*this.radialModifer + this.radialUnits});
-
-          this.legend.append("text")
-              .attr("y", (d, i) => {  return ((i)*spacing)/2.5 + this.radialUnits})
-              .attr("x", x /1.15 )
-              .attr("dy", "-.7" + this.radialUnits)
-              .text(d3format.format(".1s"))
-      } else {
+          y = this.height - this.height / 10
+          this.svg.select(".legend").remove();
         this.legend = this.svg.append("g")
         .attr("class", "legend")
         .attr("transform", `translate(${x}, ${y})`)
@@ -197,7 +172,6 @@ export default {
             .attr("y", d => { return  -2.4*this.radiusFunc(d)*this.radialModifer + this.radialUnits; })
             .attr("dy", "2.5" + this.radialUnits)
             .text(d3format.format(".1s"));
-      }
     },
     setSiteClass(year) {
       if (year == parseInt(this.currentYear)) {
@@ -206,16 +180,12 @@ export default {
       return 'site site-unhighlighted'
     },
     resizeMap() {
-      if (window.innerWidth <= 622) {
-        this.isMobile = true
-      } else {
-        this.isMobile = false
-      }
+
       this.legend.remove()
       this.width = $("#map-container").width()
       this.height = $("#map-container").height()
       let x = this.width / 2,
-          y = this.isMobile ? this.height / 2 : this.height / 2
+          y = this.height / 2
       this.projection
             .translate([x, y])
             .scale(this.width)
@@ -228,15 +198,31 @@ export default {
       this.drawLegend()
       this.drawSites(this.currentSiteData)
     },
-    createTooltip() {
-      // ensure a single tooltip
-      if (document.getElementsByClassName('tooltip').length === 0) {
-        this.toolTipDiv = d3Select.select("body")
-                                    .append("div")
-                                    .attr("class", "tooltip hidden")
-      } else {
-        this.toolTipDiv = d3Select.select('.tooltip')
-      }
+    loadCSV(f) { //could be moved to utils
+      d3Request.csv(f)
+          .row( d => {
+            return {
+              uuid: d.uuid,
+              description: d.description,
+              lat: d.latitude,
+              lng: d.longitude,
+              city: d.city,
+              state: d.state,
+              refLink: d['ref_link'],
+              gallons: d.gallons,
+              date: new Date(d.date),
+              accidentType: d['accident_type']
+            }
+          })
+          .get( (err, rows) => {
+            if (err) return console.error(err)
+            this.currentSiteData = rows
+          })
+    },
+    loadJson(f){
+      d3Request.json(f, function(data){
+        this.shiftTypes = data;
+      })
     }
   }
 }
@@ -260,12 +246,6 @@ export default {
   #map-container {
     width: 100%;
     height: 100vh;
-  }
-  /* hack to stop jerkyness on mobile */
-  @media only screen and (max-width: 768px) {
-    #map-component-container, #map-container {
-      transition: height 999999s;
-    }
   }
 
   path {
