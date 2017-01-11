@@ -6,12 +6,7 @@
 </template>
 
 <script>
-import * as d3Select from 'd3-selection'
-import * as d3Request from 'd3-request'
-import * as d3Geo from 'd3-geo'
-import * as d3scale from 'd3-scale'
-import * as transition from 'd3-transition'
-import * as d3format from 'd3-format'
+import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
 import $ from 'jquery'
 
@@ -25,7 +20,8 @@ export default {
   data() {
     return {
       currentYear: 2000,
-      currentSiteData: []
+      currentSiteData: [],
+      shiftTypes:[]
     }
   },
 
@@ -39,11 +35,11 @@ export default {
 
   mounted() {
     this.loadCSV("../data/pipe-data.csv")
-
+    this.loadJson("../data/shiftTypes.json")
     this.createContainer()
 
     // create scale
-    this.radiusFunc = d3scale.scaleSqrt()
+    this.radiusFunc = d3.scaleSqrt()
                                 .domain([0, 1e6])
                                 .range([5, 50])
     this.enterRadius = "0" // size to transition from to actual radius
@@ -53,26 +49,24 @@ export default {
     this.width = $("#map-container").width()
     this.height = $("#map-container").height()
     this.drawMap()
-    // Draw legend TODO: make own method
-    d3Select.select(window).on('resize', this.resizeMap)
-    this.drawLegend()
+    d3.select(window).on('resize', this.resizeMap)
     this.resizeMap()
   },
 
   methods: {
     createContainer() {
-      this.svg = d3Select.select("#map-container")
+      this.svg = d3.select("#map-container")
                       .append("svg")
-                          .append("g")
+                      .append("g")
     },
     drawMap() {
       let x = this.width / 2,
           y = this.height / 2
-      this.projection = d3Geo.geoAlbersUsa()
+      this.projection = d3.geoAlbersUsa()
       this.projection.scale(this.width)
       this.projection.translate([x, y])
-      let path = d3Geo.geoPath().projection(this.projection)
-      d3Request.json("../data/us.json", (error, json) => {
+      let path = d3.geoPath().projection(this.projection)
+      d3.json("../data/us.json", (error, json) => {
         if (error) return console.log(error)
         this.svg.append("path")
               .datum(topojson.feature(json, json.objects.land))
@@ -85,6 +79,30 @@ export default {
       })
     },
     drawSites(data) {
+      var shiftdata = this.shift2Data(this.shiftTypes);
+      var shiftColour = d3.scaleOrdinal(d3.schemeCategory20c);
+      var column = this.svg.selectAll(".square")
+      	.data(shiftdata)
+      	.enter().append("rect")
+      	.attr("class","square")
+      	.attr("y", function(d, i) {
+      		console.log( d.key);
+      		return d.key*10;
+      	})
+      	.attr("x", function(d) {
+      		return d.time*10;
+      	})
+      	.attr("width", function(d) { return 10; })
+      	.attr("height", function(d) {
+      		return 10;
+      	})
+      	.style("fill", function(d,i){
+      		if( d.value > 0) return shiftColour(d.key);
+      		return "#fff";
+      	}
+      	)
+      	.style("stroke", "#fff");
+
       let sites = this.svg.selectAll('.site, .site-unhighlighted, .site-highlighted')
                             .data(data.filter(d=> {
                                return this.currentYear == d.date.getFullYear();
@@ -106,33 +124,7 @@ export default {
               .attr("r", d => {
                 return (this.enterRadius)*this.radialModifer + this.radialUnits
               })
-              .on('click', d => {
-                let modalData = {
-                  'title': d.date.getFullYear(),
-                  'body': d.description
-                }
-                window.eventBus.$emit('showModal', modalData)
-              })
-              .on('mouseover', d => {
-                if (!parseInt(d.gallons)) {
-                  return
-                }
-                let formattedGallonsInt = d.gallons.toLocaleString(),
-                    stateTitle = d.state
-                this.toolTipDiv.classed("hidden", false);
-                let htmlString = `<span class='state-title'>${stateTitle}</span> <br/> ${formattedGallonsInt} <br/> <span class='gallons-label'>gallons</span>`
-                this.toolTipDiv.html(htmlString)
-                          .style("left", (d3Select.event.pageX + 20) + "px")
-                          .style("top", (d3Select.event.pageY - 28) + "px")
-              })
-              .on('mouseout', d => {
-                this.toolTipDiv.classed("hidden", true);
-              })
-              .sort( (a, b) => {
-                let aGallons = parseInt(a.gallons) ? a.gallons : 0,
-                    bGallons = parseInt(b.gallons) ? b.gallons : 0
-                return bGallons - aGallons
-              })
+
               .transition().duration(750)
                 .attr("r", d => {
                   d.gallons = parseInt(d.gallons) ?
@@ -174,7 +166,7 @@ export default {
         this.legend.append("text")
             .attr("y", d => { return  -2.4*this.radiusFunc(d)*this.radialModifer + this.radialUnits; })
             .attr("dy", "2.5" + this.radialUnits)
-            .text(d3format.format(".1s"));
+            .text(d3.format(".1s"));
     },
     setSiteClass(year) {
       if (year == parseInt(this.currentYear)) {
@@ -183,26 +175,25 @@ export default {
       return 'site site-unhighlighted'
     },
     resizeMap() {
-
-      this.legend.remove()
       this.width = $("#map-container").width()
       this.height = $("#map-container").height()
+      this.svg
+            .style("width", this.width + 'px')
+            .style("height", this.height + 'px')
+
       let x = this.width / 2,
           y = this.height / 2
       this.projection
             .translate([x, y])
             .scale(this.width)
-      this.svg
-            .style("width", this.width + 'px')
-            .style("height", this.height + 'px')
-      let path = d3Geo.geoPath().projection(this.projection)
+      let path = d3.geoPath().projection(this.projection)
       this.svg.select('.land-boundary').attr('d', path)
       this.svg.select('.state-boundary').attr('d', path)
       this.drawLegend()
       this.drawSites(this.currentSiteData)
     },
     loadCSV(f) { //could be moved to utils
-      d3Request.csv(f)
+      d3.csv(f)
           .row( d => {
             return {
               uuid: d.uuid,
@@ -223,10 +214,41 @@ export default {
           })
     },
     loadJson(f){
-      d3Request.json(f, function(data){
+      d3.json(f, data =>{
         this.shiftTypes = data;
       })
-    }
+    },
+    shift2Data(shifts) {
+			var timeParse = d3.timeParse("%Y-%m-%dT%H:%M:%S.000Z");
+
+			var radialData = [];
+			for (var hour = 0; hour < 24; hour++) {
+				shifts.forEach(function (d) {
+					var start = timeParse(d.startTimeString).getHours() - 6
+						if (start < 0)
+							start = start + 23;
+						var end = timeParse(d.endTimeString).getHours() - 6;
+					if (end < 0)
+						end = end + 24;
+					if ((hour > start && hour <= end) ||
+						(end < start && ((hour > start && hour >= end) || (hour < start && hour <= end)))) {
+						radialData.push({
+							key: d.code,
+							value: 1,
+							time: hour
+						});
+					} else {
+						radialData.push({
+							key: d.code,
+							value: 0,
+							time: hour
+						});
+					}
+				});
+			}
+			return radialData;
+		}
+
   }
 }
 </script>
